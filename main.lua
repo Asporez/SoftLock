@@ -26,6 +26,7 @@ end
 
 -- Load function is built in the Love2D framework.
 function love.load()
+    love.graphics.setDefaultFilter( "nearest", "nearest" )
 -- Load seed for math.random Lua function calls to update on load.
     math.randomseed(os.time())
 -- This static seed serves to adjust the probability while initiating stringGenerator.
@@ -44,7 +45,7 @@ The first parameter is the desired length of the CAPTCHA.
         local characterIndex = generatedString:sub( i, i )
         local characterWidth = love.graphics.getFont():getWidth( characterIndex )
         local PositionY = math.random( 1, 30 )
-        local offset = math.random( 1, 40 )
+        local offset = math.random( 1, 25 )
         local offsetAngle = math.rad( math.random( -15, 15 ) )
         table.insert( indexedCharacters, { characterIndex = characterIndex, x = PositionX, y = PositionY, offsetAngle = offsetAngle } )
         PositionX = PositionX + characterWidth + offset
@@ -52,13 +53,16 @@ The first parameter is the desired length of the CAPTCHA.
 
 end
 
+local screenX = 20
+local screenY = 150
+
 function love.draw()
 
     for _, pos in ipairs( indexedCharacters ) do
         love.graphics.push()
         love.graphics.translate( pos.x, pos.y )
         love.graphics.rotate( pos.offsetAngle )
-        love.graphics.print( pos.characterIndex, 0, 0, nil, 2, 2 )
+        love.graphics.print( pos.characterIndex, 0, 0, nil, 3, 3 )
         love.graphics.pop()
     end
 end
