@@ -1,7 +1,11 @@
 local love = require "love"
-
+--[[
+Standalone factory pattern table that produces buttons as well as determine
+functionality of those buttons from the main file.
+--]]
+-- text string, function, optional parameters, position X, position Y, text position X, text position Y
 function Button( text, func, func_param, width, height )
-    return { -- determines the body of a button when it is created and default values.
+    return {
         width = width or 100,
         height = height or 100,
         func = func or function() print( "This button has no functions attached" ) end,
@@ -11,8 +15,8 @@ function Button( text, func, func_param, width, height )
         button_y = 0,
         text_x = 0,
         text_y = 0,
-
-        checkPressed = function ( self, mouse_x, mouse_y, cursor_radius ) -- this class changes a button state to be pressed only if the mouse cursor is above the button.
+-- Execute the button that is clicked on
+        checkPressed = function ( self, mouse_x, mouse_y, cursor_radius )
             if ( mouse_x + cursor_radius >= self.button_x ) and ( mouse_x - cursor_radius <= self.button_x + self.width ) then
                 if ( mouse_y + cursor_radius >= self.button_y ) and ( mouse_y - cursor_radius <= self.button_y + self.height ) then
                     if self.func_param then
@@ -23,8 +27,8 @@ function Button( text, func, func_param, width, height )
                 end    
             end
         end,
-
-        draw = function ( self, button_x, button_y, text_x, text_y ) -- determines what the default button looks like.
+-- Determines the appearance of the buttons to be instantiated.
+        draw = function ( self, button_x, button_y, text_x, text_y )
             self.button_x = button_x or self.button_x
             self.button_y = button_y or self.button_y
 

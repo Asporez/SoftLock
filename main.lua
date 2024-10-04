@@ -1,13 +1,37 @@
 -- All you need is love, tu tu du du du duuuu
 local love = require( 'love' )
+local button = require( 'src.buttons' )
+-- store variables that determines the area covered by the cursor
+local cursor = {
+    radius = 2,
+    x = 1,
+    y = 1
+}
 
 local program = {
     state = {
-        intro = false,
-        test = true,
+        intro = true,
+        test = false,
         solved = false,
     }
 }
+
+-- table to initiate the button factory as defined on load.
+local buttons = {
+    intro_state = {}
+}
+
+local function initiateTest()
+    program.state[ 'intro' ] = false
+    program.state[ 'test' ] = true
+    program.state[ 'solved' ] = false
+end
+
+local function solveTest()
+    program.state[ 'intro' ] = false
+    program.state[ 'test' ] = false
+    program.state[ 'solved' ] = true
+end
 
 -- This function generates a random string, parameters are length and seed, and both defined in the load function below.
 local function stringGenerator( Length, inputRNG )
@@ -40,8 +64,9 @@ function love.load()
     noiseFont = love.graphics.newFont( 'zxx-noise.ttf', 26 )
     love.graphics.setFont( noiseFont )
     love.graphics.setDefaultFilter( "nearest", "nearest" )
+    buttons.intro_state.startTest = button( "Initiate", initiateTest, nil, 140, 40 )
 -- Load seed for math.random Lua function calls to update on load.
-    math.randomseed(os.time())
+    math.randomseed( os.time() )
 -- This static seed serves to adjust the probability while initiating stringGenerator.
     local inputRNG = 0.5
 --[[
@@ -53,7 +78,7 @@ It also defines the user input that is required for the solution.
 
 -- Table to store indexes and later print them individually
     indexedCharacters = {}
-    local PositionX = (screenX + math.random( 6, 12 )) / 4
+    local PositionX = ( screenX + math.random( 6, 12 ) ) / 4
 --[[
 Below is the loop to index each character and iterate randomized positioning.
 I used operands quite arbitrarily and played around until I was satisfied with the output.
@@ -62,12 +87,24 @@ Maybe it's because there are 3 coordinates? I don't know, I'm a programmer not a
 --]]
     for i = 1, #generatedString do
         local characterIndex = generatedString:sub( i, i )
-        local characterWidth = (love.graphics.getFont():getWidth( characterIndex ))
+        local characterWidth = ( love.graphics.getFont():getWidth( characterIndex ) )
         local PositionY = math.random( 6, 24 )
         local offset = math.random( 6, 30 )
         local offsetAngle = math.rad( math.random( -3, 3 ) )
         table.insert( indexedCharacters, { characterIndex = characterIndex, x = PositionX, y = PositionY, offsetAngle = offsetAngle } )
         PositionX = PositionX + characterWidth + offset
+    end
+-- registers any mouse button as long as the cursor is hovering a button.
+    function love.mousepressed( x, y, button, istouch, presses )
+        if not program.state[ 'test' ] then
+            if button == 1 then
+                if program.state[ 'intro' ] or program.state[ 'solved' ] then
+                    for index in pairs( buttons.intro_state ) do
+                        buttons.intro_state[ index ]:checkPressed( x, y, cursor.radius )
+                    end
+                end
+            end 
+        end
     end
 
 end
@@ -82,6 +119,10 @@ function love.keypressed(key)
     if key == 'backspace' then
         userInput = userInput:sub( 1, -2 )
     end
+
+    if userInput == generatedString then
+        solveTest()
+    end
 end
 
 function love.update(dt)
@@ -92,11 +133,19 @@ function love.draw()
 
     love.graphics.rectangle( 'line', screenX, screenY, 420, 100 )
 
-    for _, pos in ipairs( indexedCharacters ) do
-        love.graphics.push()
-        love.graphics.translate( ( pos.x + math.random( -1, 1 ) ), ( pos.y + math.random( -1, 1 ) ) )
-        love.graphics.rotate( pos.offsetAngle )
-        love.graphics.print( pos.characterIndex, screenX + 6, screenY + 6 )
-        love.graphics.pop()
+
+    if program.state[ 'test' ] then
+        love.graphics.print(userInput)
+        for _, pos in ipairs( indexedCharacters ) do
+            love.graphics.push()
+            love.graphics.translate( ( pos.x + math.random( -1, 1 ) ), ( pos.y + math.random( -1, 1 ) ) )
+            love.graphics.rotate( pos.offsetAngle )
+            love.graphics.print( pos.characterIndex, screenX + 6, screenY + 6 )
+            love.graphics.pop()
+        end
+    elseif program.state['intro'] then
+        buttons.intro_state.startTest:draw( 260, 220, 1, 1 )
+    elseif program.state[ 'solved' ] then
+        love.graphics.print("Test Solved", 10, 200)
     end
 end
