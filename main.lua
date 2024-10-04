@@ -1,5 +1,14 @@
 -- All you need is love, tu tu du du du duuuu
 local love = require( 'love' )
+
+local program = {
+    state = {
+        intro = false,
+        test = true,
+        solved = false,
+    }
+}
+
 -- This function generates a random string, parameters are length and seed, and both defined in the load function below.
 local function stringGenerator( Length, inputRNG )
 -- Stored variables for the random stringGenerator.
@@ -61,6 +70,22 @@ Maybe it's because there are 3 coordinates? I don't know, I'm a programmer not a
         PositionX = PositionX + characterWidth + offset
     end
 
+end
+-- Store user input as a string.
+userInput = ""
+-- This function is to append typed characters to the userInput string.
+function love.textinput(t)
+    userInput = userInput..t
+end
+-- Humans make mistakes sometimes. Bots too but we don't talk about that, life is unfair.
+function love.keypressed(key)
+    if key == 'backspace' then
+        userInput = userInput:sub( 1, -2 )
+    end
+end
+
+function love.update(dt)
+    
 end
 
 function love.draw()
