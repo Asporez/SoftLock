@@ -24,8 +24,12 @@ adds the result to the index until desired length then returns resultString.
     return resultString
 end
 
--- Load function is built in the Love2D framework.
+local screenX = 200
+local screenY = 200
+
 function love.load()
+    noiseFont = love.graphics.newFont( 'zxx-noise.ttf', 26 )
+    love.graphics.setFont( noiseFont )
     love.graphics.setDefaultFilter( "nearest", "nearest" )
 -- Load seed for math.random Lua function calls to update on load.
     math.randomseed(os.time())
@@ -34,35 +38,40 @@ function love.load()
 --[[
 generatedString initiates the random stringGenerator and stores the output.
 The first parameter is the desired length of the CAPTCHA.
+It also defines the user input that is required for the solution.
 --]]
     generatedString = stringGenerator( 10, inputRNG )
 
 -- Table to store indexes and later print them individually
     indexedCharacters = {}
-    local PositionX = math.random( 1, 40 )
--- This loop is to single out each character and iterate randomized positioning.
+    local PositionX = (screenX + math.random( 6, 12 )) / 4
+--[[
+Below is the loop to index each character and iterate randomized positioning.
+I used operands quite arbitrarily and played around until I was satisfied with the output.
+For some reason, multiples of 3 provided the lowest amount of failed tests during this phase.
+Maybe it's because there are 3 coordinates? I don't know, I'm a programmer not a mathematician.
+--]]
     for i = 1, #generatedString do
         local characterIndex = generatedString:sub( i, i )
-        local characterWidth = love.graphics.getFont():getWidth( characterIndex )
-        local PositionY = math.random( 1, 30 )
-        local offset = math.random( 1, 25 )
-        local offsetAngle = math.rad( math.random( -15, 15 ) )
+        local characterWidth = (love.graphics.getFont():getWidth( characterIndex ))
+        local PositionY = math.random( 6, 24 )
+        local offset = math.random( 6, 30 )
+        local offsetAngle = math.rad( math.random( -3, 3 ) )
         table.insert( indexedCharacters, { characterIndex = characterIndex, x = PositionX, y = PositionY, offsetAngle = offsetAngle } )
         PositionX = PositionX + characterWidth + offset
     end
 
 end
 
-local screenX = 20
-local screenY = 150
-
 function love.draw()
+
+    love.graphics.rectangle( 'line', screenX, screenY, 420, 100 )
 
     for _, pos in ipairs( indexedCharacters ) do
         love.graphics.push()
-        love.graphics.translate( pos.x, pos.y )
+        love.graphics.translate( ( pos.x + math.random( -1, 1 ) ), ( pos.y + math.random( -1, 1 ) ) )
         love.graphics.rotate( pos.offsetAngle )
-        love.graphics.print( pos.characterIndex, 0, 0, nil, 3, 3 )
+        love.graphics.print( pos.characterIndex, screenX + 6, screenY + 6 )
         love.graphics.pop()
     end
 end
