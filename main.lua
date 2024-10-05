@@ -94,37 +94,6 @@ Maybe it's because there are 3 coordinates? Common factor magick!? I don't know,
         table.insert( indexedCharacters, { characterIndex = characterIndex, x = PositionX, y = PositionY, offsetAngle = offsetAngle } )
         PositionX = PositionX + characterWidth + offset
     end
---[[
-Below is the function to analyze movement mouse movement, 
---]]
-    function analyzeMovement( path )
--- Variables that tracks the total distance and time
-        local totalDistance = 0
-        local totalTime = 0
--- This loop iterates starting from index 2 to compare two consecutive points.
-        for i = 2, #path do
--- compare X and Y coordinates of index 2 and the previous index.
-        local dx = path[ i ].x - path[ i - 1 ].x
-        local dy = path[ i ].y - path[ i - 1 ].y
--- Ooof that is a lot of math, luckily there is a small version of Pythagore in the computer.
-        local distance = math.sqrt( dx * dx + dy * dy )
--- Here we skip to the 4th dimension and compare duration between index 2 and the previous index.
-        local timeDifference = path[ i ].time - path[ i - 1 ].time
--- Store total distance covered by the mouse cursor.
-        totalDistance = totalDistance + distance
--- Store total duration of the mouse input.
-        totalTime = totalTime + timeDifference
-        end
-
-        local avgSpeed = totalDistance / totalTime
--- TODO: the threshold of speed needs to be adjusted
-        if avgSpeed > 10 then
-            return "bot-like"
-        else
-            return "human-like"
-        end
-
-    end
 
 -- registers any mouse button as long as the cursor is hovering a button.
     function love.mousepressed( x, y, button, istouch, presses )
@@ -138,6 +107,66 @@ Below is the function to analyze movement mouse movement,
     end
 
 end
+
+
+-- table to store the path taken by the mouse.
+local mousePath = {}
+function love.mousemoved(x, y, dx, dy, istouch)
+    table.insert( mousePath, { x = x, y = y, time = love.timer.getTime() } )
+end
+
+-- Function to analyze the mouse movement
+function analyzeMovement(path)
+-- Variables to track the total distance and time
+    local totalDistance = 0
+    local totalTime = 0
+
+    print("Analyzing Movement...") -- Initial debug message
+
+-- Loop to compare consecutive points (start at index 2)
+    if program.state['intro'] then
+        for i = 2, #path do
+            local dx = path[i].x - path[i - 1].x
+            local dy = path[i].y - path[i - 1].y
+            local distance = math.sqrt(dx * dx + dy * dy)
+            local timeDifference = path[i].time - path[i - 1].time
+
+            print(string.format("Step %d: ", i))
+            print(string.format("Previous Point: (%.2f, %.2f)", path[i - 1].x, path[i - 1].y))
+            print(string.format("Current Point: (%.2f, %.2f)", path[i].x, path[i].y))
+            print(string.format("dx: %.2f, dy: %.2f", dx, dy))
+            print(string.format("Distance: %.2f", distance))
+            print(string.format("Time Difference: %.2f", timeDifference))
+
+            totalDistance = totalDistance + distance
+            totalTime = totalTime + timeDifference
+        end
+
+    -- If the totalTime is 0, prevent division by zero
+        if totalTime == 0 then
+            print("Total Time is zero, cannot calculate average speed.")
+            return "insufficient data"
+        end
+
+    -- Calculate average speed
+        local avgSpeed = totalDistance / totalTime
+
+    -- Print the total values and the calculated average speed
+        print(string.format("Total Distance: %.2f", totalDistance))
+        print(string.format("Total Time: %.2f", totalTime))
+        print(string.format("Average Speed: %.2f", avgSpeed))
+
+    -- Return movement type based on speed threshold TODO: THIS NEEDS ADJUSTING, ALWAYS RETURNS AS BOT FOR NOW
+        if avgSpeed > 1 then
+            print("Movement detected as bot-like")
+            return "bot-like"
+        else
+            print("Movement detected as human-like")
+            return "human-like"
+        end
+    end
+end
+
 -- Store user input as a string.
 userInput = ""
 -- This function is to append typed characters to the userInput string.
@@ -155,14 +184,13 @@ function love.keypressed(key)
     end
 end
 
--- table to store the path taken by the mouse.
-local mousePath = {}
-function love.mousemoved(x, y, dx, dy, istouch)
-    table.insert( mousePath, { x = x, y = y, time = love.timer.getTime() } )
-end
 
 function love.update(dt)
-    
+    if program.state['intro'] then
+        -- Call analyzeMovement and print debug info when relevant (e.g., after mouse movement)
+        local movementType = analyzeMovement(mousePath)
+        print("Final Movement Analysis: " .. movementType)
+    end
 end
 
 function love.draw()
