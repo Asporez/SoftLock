@@ -83,7 +83,7 @@ It also defines the user input that is required for the solution.
 Below is the loop to index each character and iterate randomized positioning.
 I used operands quite arbitrarily and played around until I was satisfied with the output.
 For some reason, multiples of 3 provided the lowest amount of failed tests during this phase.
-Maybe it's because there are 3 coordinates? I don't know, I'm a programmer not a mathematician.
+Maybe it's because there are 3 coordinates? Common factor magick!? I don't know, I'm not a mathematician.
 --]]
     for i = 1, #generatedString do
         local characterIndex = generatedString:sub( i, i )
@@ -94,15 +94,45 @@ Maybe it's because there are 3 coordinates? I don't know, I'm a programmer not a
         table.insert( indexedCharacters, { characterIndex = characterIndex, x = PositionX, y = PositionY, offsetAngle = offsetAngle } )
         PositionX = PositionX + characterWidth + offset
     end
+--[[
+Below is the function to analyze movement mouse movement, 
+--]]
+    function analyzeMovement( path )
+-- Variables that tracks the total distance and time
+        local totalDistance = 0
+        local totalTime = 0
+-- This loop iterates starting from index 2 to compare two consecutive points.
+        for i = 2, #path do
+-- compare X and Y coordinates of index 2 and the previous index.
+        local dx = path[ i ].x - path[ i - 1 ].x
+        local dy = path[ i ].y - path[ i - 1 ].y
+-- Ooof that is a lot of math, luckily there is a small version of Pythagore in the computer.
+        local distance = math.sqrt( dx * dx + dy * dy )
+-- Here we skip to the 4th dimension and compare duration between index 2 and the previous index.
+        local timeDifference = path[ i ].time - path[ i - 1 ].time
+-- Store total distance covered by the mouse cursor.
+        totalDistance = totalDistance + distance
+-- Store total duration of the mouse input.
+        totalTime = totalTime + timeDifference
+        end
+
+        local avgSpeed = totalDistance / totalTime
+-- TODO: the threshold of speed needs to be adjusted
+        if avgSpeed > 10 then
+            return "bot-like"
+        else
+            return "human-like"
+        end
+
+    end
+
 -- registers any mouse button as long as the cursor is hovering a button.
     function love.mousepressed( x, y, button, istouch, presses )
         if not program.state[ 'test' ] then
             if button == 1 then
-                if program.state[ 'intro' ] or program.state[ 'solved' ] then
-                    for index in pairs( buttons.intro_state ) do
-                        buttons.intro_state[ index ]:checkPressed( x, y, cursor.radius )
-                    end
-                end
+                for index in pairs( buttons.intro_state ) do
+                    buttons.intro_state[ index ]:checkPressed( x, y, cursor.radius )
+                end 
             end 
         end
     end
@@ -125,6 +155,12 @@ function love.keypressed(key)
     end
 end
 
+-- table to store the path taken by the mouse.
+local mousePath = {}
+function love.mousemoved(x, y, dx, dy, istouch)
+    table.insert( mousePath, { x = x, y = y, time = love.timer.getTime() } )
+end
+
 function love.update(dt)
     
 end
@@ -143,9 +179,9 @@ function love.draw()
             love.graphics.print( pos.characterIndex, screenX + 6, screenY + 6 )
             love.graphics.pop()
         end
-    elseif program.state['intro'] then
+    elseif program.state[ 'intro' ] then
         buttons.intro_state.startTest:draw( 260, 220, 1, 1 )
     elseif program.state[ 'solved' ] then
-        love.graphics.print("Test Solved", 10, 200)
+        love.graphics.print( "Test Solved", 10, 200 )
     end
 end
