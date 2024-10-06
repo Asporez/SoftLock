@@ -60,8 +60,10 @@ end
 local screenX = 200
 local screenY = 200
 
+-- local fontStore = {}
+
 function love.load()
-    noiseFont = love.graphics.newFont( 'zxx-noise.ttf', 26 )
+    noiseFont = love.graphics.newFont( 'ZXX_Noise.otf', 30 )
     love.graphics.setFont( noiseFont )
     love.graphics.setDefaultFilter( "nearest", "nearest" )
     buttons.intro_state.startTest = button( "Initiate", initiateTest, nil, 140, 40 )
@@ -115,7 +117,7 @@ function love.mousemoved(x, y, dx, dy, istouch)
     table.insert( mousePath, { x = x, y = y, time = love.timer.getTime() } )
 end
 
--- Function to analyze the mouse movement
+-- Function to analyze the mouse movement.
 function analyzeMovement(path)
 -- Variables to track the total distance and time
     local totalDistance = 0
@@ -130,14 +132,14 @@ function analyzeMovement(path)
             local dy = path[i].y - path[i - 1].y
             local distance = math.sqrt(dx * dx + dy * dy)
             local timeDifference = path[i].time - path[i - 1].time
-
+--[[ remove comment markers to get brain exploding amount of values printed in the console.
             print(string.format("Step %d: ", i))
             print(string.format("Previous Point: (%.2f, %.2f)", path[i - 1].x, path[i - 1].y))
             print(string.format("Current Point: (%.2f, %.2f)", path[i].x, path[i].y))
             print(string.format("dx: %.2f, dy: %.2f", dx, dy))
             print(string.format("Distance: %.2f", distance))
             print(string.format("Time Difference: %.2f", timeDifference))
-
+--]]
             totalDistance = totalDistance + distance
             totalTime = totalTime + timeDifference
         end
@@ -157,10 +159,10 @@ function analyzeMovement(path)
         print(string.format("Average Speed: %.2f", avgSpeed))
 
     -- Return movement type based on speed threshold TODO: THIS NEEDS ADJUSTING, ALWAYS RETURNS AS BOT FOR NOW
-        if avgSpeed > 1 then
+        if avgSpeed > 10 then
             print("Movement detected as bot-like")
             return "bot-like"
-        else
+        elseif avgSpeed > 0.2 and avgSpeed <= 10 then
             print("Movement detected as human-like")
             return "human-like"
         end
