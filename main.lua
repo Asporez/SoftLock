@@ -1,13 +1,14 @@
 -- All you need is love, tu tu du du du duuuu
 local love = require( 'love' )
 local button = require( 'src.buttons' )
--- store variables that determines the area covered by the cursor
+local keymap = require( 'src.keymap' )
+-- Store variables that determines the area covered by the cursor
 local cursor = {
     radius = 2,
     x = 1,
     y = 1
 }
-
+-- table to store stages for the program to be run in.
 local program = {
     state = {
         intro = true,
@@ -20,6 +21,12 @@ local program = {
 local buttons = {
     intro_state = {}
 }
+
+local function resetProgram()
+    program.state[ 'intro' ] = true
+    program.state[ 'test' ] = false
+    program.state[ 'solved' ] = false
+end
 
 local function initiateTest()
     program.state[ 'intro' ] = false
@@ -65,7 +72,10 @@ local screenY = math.random(10, 200)
 -- local fontStore = {}
 
 function love.load()
-    noiseFont = love.graphics.newFont( 'ZXX_Xed.otf', 30 )
+-- Obfuscated font.
+    falseFont = love.graphics.newFont( 'ZXX_False.otf', 32 )
+-- Less obfuscated font.
+    noiseFont = love.graphics.newFont( 'ZXX_Noise.otf', 32 )
     love.graphics.setFont( noiseFont )
 -- set default filter for love.graphics (removes autodithering)
     love.graphics.setDefaultFilter( "nearest", "nearest" )
@@ -79,7 +89,7 @@ generatedString initiates the random stringGenerator and stores the output.
 The first parameter is the desired length of the CAPTCHA.
 It also defines the user input that is required for the solution.
 --]]
-    generatedString = stringGenerator( 10, inputRNG )
+    generatedString = stringGenerator( 8, inputRNG )
 
 -- Table to store indexes and later print them individually
     indexedCharacters = {}
@@ -179,7 +189,14 @@ end
 userInput = ""
 -- This function is to append typed characters to the userInput string.
 function love.textinput(t)
-    userInput = userInput..t
+    local mappedChar = keymap[t]
+
+    if mappedChar then
+        userInput = userInput..mappedChar
+    else
+        userInput = userInput..t
+    end
+
 end
 -- Humans make mistakes sometimes.
 function love.keypressed(key)
@@ -192,6 +209,8 @@ function love.keypressed(key)
     end
 end
 
+local timer = 0
+local resetTime = 30
 
 function love.update(dt)
     if program.state[ 'intro' ] then
@@ -199,18 +218,46 @@ function love.update(dt)
         local movementType = analyzeMovement( mousePath )
         print( "Final Movement Analysis: " .. movementType )
         if movementType == "bot-like" then
-            print( "BOT-LIKE EVENT" )
+            print( "FAIL 1" )
+            resetProgram()
         end
+        if movementType == "insufficient data" then
+            print( "FAIL 2" )
+            resetProgram()
+        end
+        if movementType == "human-like" then
+            print( "PASS" )
+        end
+
     end
+
+    if program.state[ 'test' ] then
+        timer = timer + dt
+
+        if timer >= resetTime then
+            resetProgram()
+            timer = 0
+        end
+
+    end
+
 end
 
 function love.draw()
 
-    love.graphics.rectangle( 'line', screenX, screenY, 420, 100 )
+-- UI border stores
+    local outerX, outerY, outerWidth, outerHeight = 0, 0, 640, 480
+    local innerX, innerY, innerWidth, innerHeight = 10, 10, 620, 460
+-- draw UI borders with RGB values.
+    love.graphics.setColor(1, 0, 0)
+    love.graphics.rectangle("fill", outerX, outerY, outerWidth, outerHeight)
+    love.graphics.setColor(1, 0.8, 0.8)
+    love.graphics.rectangle("fill", innerX, innerY, innerWidth, innerHeight)
 
 
     if program.state[ 'test' ] then
         love.graphics.print( userInput )
+        love.graphics.print(timer)
 
 -- This loop is to draw each characters individually and apply the tranformations
         for _, pos in ipairs( indexedCharacters ) do
@@ -219,6 +266,7 @@ function love.draw()
             local g = math.random()
             local b = math.random()
             love.graphics.setColor( r, g, b )
+            love.graphics.setFont( falseFont )
 
             love.graphics.push()
             love.graphics.translate( ( pos.x + math.random( -1, 1 ) ), ( pos.y + math.random( -1, 1 ) ) )
@@ -229,6 +277,8 @@ function love.draw()
     elseif program.state[ 'intro' ] then
         buttons.intro_state.startTest:draw( 260, 220, 1, 1 )
     elseif program.state[ 'solved' ] then
-        love.graphics.print( "Test Solved", 10, 200 )
+-- Oh yeah right, gotta deobfuscate the deobfuscationated...err wait...
+-- I'll do it manually... "Gvhg Hloevw" = "Test Solved"
+        love.graphics.print( "Gvhg Hloevw", 10, 200 )
     end
 end
