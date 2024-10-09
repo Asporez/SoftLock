@@ -8,7 +8,11 @@ local cursor = {
     x = 1,
     y = 1
 }
--- table to store stages for the program to be run in.
+--[[
+Table to store the program states,
+program.state[ 'solved' ] prints a message but has no functionality.
+Can be used to export call that test is passed.
+--]]
 local program = {
     state = {
         intro = true,
@@ -30,7 +34,8 @@ local function initiateTest()
     program.state[ 'test' ] = true
     program.state[ 'solved' ] = false
 end
-
+-- This helper function is triggered when speed, trajectory, and sentience are verified.
+-- Can also be used to export call that test is passed.
 local function solveTest()
     program.state[ 'intro' ] = false
     program.state[ 'test' ] = false
@@ -63,40 +68,33 @@ end
 
 
 -- This defines the initial coordinates of the CAPTCHA.
-local screenX = math.random(10, 200)
-local screenY = math.random(10, 200)
+local screenX = math.random( 10, 200 )
+local screenY = math.random( 10, 200 )
 -- table to store the path taken by the mouse.
 local mousePath = {}
--- Function to analyze the mouse movement.
-function analyzeMovement(path)
+-- Function to analyze the mouse movement speed.
+function analyzeMovement( pathDistance )
 -- Variables to track the total distance and time
     local totalDistance = 0
     local totalTime = 0
     
-    print("Analyzing Movement...")
+    print( "Analyzing Movement..." )
     
 -- Loop to compare consecutive points (start at index 2)
-    if program.state['intro'] then
-        for i = 2, #path do
-            local dx = path[i].x - path[i - 1].x
-            local dy = path[i].y - path[i - 1].y
-            local distance = math.sqrt(dx * dx + dy * dy)
-            local timeDifference = path[i].time - path[i - 1].time
---[[ remove comment markers to get brain exploding amount of values printed in the console.
-            print(string.format("Step %d: ", i))
-            print(string.format("Previous Point: (%.2f, %.2f)", path[i - 1].x, path[i - 1].y))
-            print(string.format("Current Point: (%.2f, %.2f)", path[i].x, path[i].y))
-            print(string.format("dx: %.2f, dy: %.2f", dx, dy))
-            print(string.format("Distance: %.2f", distance))
-            print(string.format("Time Difference: %.2f", timeDifference))
---]]
+    if program.state[ 'intro' ] then
+        for i = 2, #pathDistance do
+            local dx = pathDistance[i].x - pathDistance[ i - 1 ].x
+            local dy = pathDistance[i].y - pathDistance[ i - 1 ].y
+            local distance = math.sqrt( dx * dx + dy * dy )
+            local timeDifference = pathDistance[i].time - pathDistance[ i - 1 ].time
+
             totalDistance = totalDistance + distance
             totalTime = totalTime + timeDifference
         end
     
 -- If the totalTime is 0, prevent division by zero
         if totalTime == 0 then
-            print("Total Time is zero, cannot calculate average speed.")
+            print( "Total Time is zero, cannot calculate average speed." )
             return "insufficient data"
         end
     
@@ -104,21 +102,79 @@ function analyzeMovement(path)
         local avgSpeed = totalDistance / totalTime
     
 -- Print the total values and the calculated average speed
-        print(string.format("Total Distance: %.2f", totalDistance))
-        print(string.format("Total Time: %.2f", totalTime))
-        print(string.format("Average Speed: %.2f", avgSpeed))
+        print( string.format( "Total Distance: %.2f", totalDistance ) )
+        print( string.format( "Total Time: %.2f", totalTime ) )
+        print( string.format( "Average Speed: %.2f", avgSpeed ) )
     
--- Return movement type based on speed threshold TODO: THIS NEEDS ADJUSTING, I never made expert systems, terra incognita.
--- at around 500 I can trigger the bot-like response if I go really fast so let's start with that!
-        if avgSpeed > 500 then
-            print("Movement detected as bot-like")
+        if avgSpeed > 900 then
+            print( "Movement detected as bot-like" )
             return "bot-like"
-        elseif avgSpeed > 0.1 and avgSpeed <= 500 then
-            print("Movement detected as human-like")
+        elseif avgSpeed > 0.1 and avgSpeed <= 900 then
+            print( "Movement detected as human-like" )
             return "human-like"
         end
     end
 end
+
+function analyzeTrajectory( mousePositions )
+
+-- Check the size of the mousePositions table
+    print("Number of mouse positions: " .. #mousePositions)
+
+-- If there are not enough points, return early
+    if #mousePositions < 3 then
+        print("Not enough points to analyze trajectory.")
+        return "insufficient data"
+    end
+
+    local totalDeviation = 0
+    local totalAngleChange = 0
+
+    for i = 2, #mousePositions - 1 do
+-- Calculate the distance from point ( i ) to the line formed by points ( i-1 ) and ( i+1 )
+        local x1, y1 = mousePositions[ i-1 ].x, mousePositions[ i-1 ].y
+        local x2, y2 = mousePositions[ i+1 ].x, mousePositions[ i+1 ].y
+        local x, y = mousePositions[ i ].x, mousePositions[ i ].y
+
+-- Deviation from the line ( using point-line distance formula that people with big brains created )
+        local deviation = math.abs( ( y2 - y1 ) * x - ( x2 - x1 ) * y + x2 * y1 - y2 * x1 ) /
+                          math.sqrt( ( y2 - y1 )^2 + ( x2 - x1 )^2 )
+
+        totalDeviation = totalDeviation + deviation
+
+-- Calculate the angle between consecutive movement vectors
+        local vector1x, vector1y = x - x1, y - y1
+        local vector2x, vector2y = x2 - x, y2 - y
+        local dotProduct = vector1x * vector2x + vector1y * vector2y
+        local magnitude1 = math.sqrt( vector1x^2 + vector1y^2 )
+        local magnitude2 = math.sqrt( vector2x^2 + vector2y^2 )
+        local angleChange = math.acos( dotProduct / (magnitude1 * magnitude2 ) )
+
+        -- Check for valid dot product to avoid errors in acos
+        if magnitude1 > 0 and magnitude2 > 0 then
+            local angleChange = math.acos(dotProduct / (magnitude1 * magnitude2))
+            totalAngleChange = totalAngleChange + angleChange
+        else
+            print("Skipping angle change due to zero magnitude.")
+        end
+    end
+
+    -- Define thresholds for what counts as "human-like" and "bot-like"
+    local avgDeviation = totalDeviation / ( #mousePositions - 2 )
+    local avgAngleChange = totalAngleChange / ( #mousePositions - 2 )
+
+    print( string.format( "Average Deviation: %.2f", avgDeviation ) )
+    print( string.format( "Average Angle Change: %.2f", avgAngleChange ) )
+
+    if avgDeviation < 2 and avgAngleChange < math.rad(5) then
+        print( "Trajectory detected as bot-like" )
+        return "bot-like-trajectory"
+    else
+        print( "Trajectory detected as human-like" )
+        return "human-like-trajectory"
+    end
+end
+
 
 function love.load()
 -- Obfuscated font.
@@ -126,7 +182,7 @@ function love.load()
 -- Less obfuscated font.
     noiseFont = love.graphics.newFont( 'ZXX_Noise.otf', 32 )
     love.graphics.setFont( noiseFont )
--- set default filter for love.graphics (removes autodithering)
+-- set default filter for love.graphics to scale without antialiasing.
     love.graphics.setDefaultFilter( "nearest", "nearest" )
     buttons.intro_state.startTest = button( "Initiate", initiateTest, nil, 160, 40 )
 -- Load seed for math.random Lua function calls to update on load.
@@ -139,16 +195,15 @@ The first parameter is the desired length of the CAPTCHA.
 It also defines the user input that is required for the solution.
 --]]
     generatedString = stringGenerator( 8, inputRNG )
-
--- Table to store indexes and later print them individually
-    indexedCharacters = {}
-    local PositionX = ( screenX + math.random( 6, 12 ) ) / 4
 --[[
 Below is the loop to index each character and iterate randomized positioning.
 I used operands quite arbitrarily and played around until I was satisfied with the output.
 I did about 100 tests and eyeballed it, this can be improved with more data
 about the potential threat's capabilities.
 --]]
+-- Table to store indexes and later print them individually
+    indexedCharacters = {}
+    local PositionX = ( screenX + math.random( 6, 12 ) ) / 4
     for i = 1, #generatedString do
         local characterIndex = generatedString:sub( i, i )
         local characterWidth = ( love.graphics.getFont():getWidth( characterIndex ) )
@@ -159,28 +214,41 @@ about the potential threat's capabilities.
         PositionX = PositionX + characterWidth + offset
     end
 
--- This singleton presses buttons with the mouse cursor.
-    function love.mousepressed( x, y, button, istouch, presses )
-        if program.state[ 'intro' ] then
-            if button == 1 and analyzeMovement( mousePath ) == "human-like" then
-                for index in pairs( buttons.intro_state ) do
-                    buttons.intro_state[ index ]:checkPressed( x, y, cursor.radius )
-                end 
-            end 
-        end
-    end
-
 end
 
-function love.mousemoved(x, y, dx, dy, istouch)
+function love.mousemoved( x, y, dx, dy, istouch )
     table.insert( mousePath, { x = x, y = y, time = love.timer.getTime() } )
+end
+
+-- Mouse pressed event to trigger analysis
+function love.mousepressed(x, y, button, istouch, presses)
+    if program.state['intro'] then
+        if button == 1 then
+-- Only check if we have sufficient data
+            if #mousePath > 100 then
+                local movementResult = analyzeMovement(mousePath)
+                local trajectoryResult = analyzeTrajectory(mousePath)
+
+                if movementResult == "human-like" and trajectoryResult == "human-like-trajectory" then
+                    for index in pairs(buttons.intro_state) do
+                        buttons.intro_state[index]:checkPressed(x, y, cursor.radius)
+                    end
+                else
+                    print("Bot-like behavior detected or insufficient data.")
+                    love.load() -- Restart the test if bot-like movement is detected
+                end
+            else
+                print("Not enough data to perform analysis.")
+            end
+        end
+    end
 end
 
 -- Store user input as a string.
 userInput = ""
 -- This function is to append typed characters to the userInput string.
-function love.textinput(t)
-    local mappedChar = keymap[t]
+function love.textinput( t )
+    local mappedChar = keymap[ t ]
 
     if mappedChar then
         userInput = userInput..mappedChar
@@ -190,7 +258,7 @@ function love.textinput(t)
 
 end
 -- Humans make mistakes sometimes.
-function love.keypressed(key)
+function love.keypressed( key )
     if key == 'backspace' then
         userInput = userInput:sub( 1, -2 )
     end
@@ -204,48 +272,63 @@ local timer = 0
 local resetTime = 30
 
 function love.update(dt)
-    if program.state[ 'intro' ] then
--- Call analyzeMovement and print debug info when relevant (e.g., after mouse movement)
-        local movementType = analyzeMovement( mousePath )
-        print( "Final Movement Analysis: " .. movementType )
-        if movementType == "bot-like" or movementType == "insufficient data" then
-            print( "FAIL" )
-            love.load()
-        elseif movementType == "human-like" then
-            print( "PASS" )
-        end
+    if program.state['intro'] then
+-- Updates the analysis of the movement and trajectory, the if loop ensures some movement occurs before a decision is made.
+-- The idea is to block a cursor that would just instantiate on top of a button and forces human-like input to be produced.
+        if #mousePath > 100 then
+            local movementType = analyzeMovement(mousePath)
+            local trajectoryType = analyzeTrajectory(mousePath)
 
+            print("Final Movement Analysis: " .. movementType)
+            print("Final Trajectory Analysis: " .. trajectoryType)
+
+            if movementType == "bot-like" or trajectoryType == "bot-like-trajectory" then
+                print("Bot-like behavior detected.")
+                love.load() -- Restart on bot-like detection
+            elseif movementType == "human-like" and trajectoryType == "human-like-trajectory" then
+                print("Human-like behavior detected.")
+            end
+        end
     end
 
-    if program.state[ 'test' ] then
+-- Timer logic for CATCHA phase
+    if program.state['test'] then
         timer = timer + dt
-
         if timer >= resetTime then
             love.load()
             timer = 0
         end
-
     end
-
 end
 
 function love.draw()
 
---[[ UI border stores
-    local outerX, outerY, outerWidth, outerHeight = 0, 0, 640, 480
-    local innerX, innerY, innerWidth, innerHeight = 10, 10, 620, 460
+-- outer border
+    local outerX = 0
+    local outerY = 0
+    local outerWidth = 640
+    local outerHeight = 480
+-- inner border
+    local innerX = outerX + 10
+    local innerY = outerX + 10
+    local innerWidth = outerWidth - 20
+    local innerHeight = outerHeight - 20
 -- draw UI borders with RGB values.
-    love.graphics.setColor(1, 0, 0)
-    love.graphics.rectangle("fill", outerX, outerY, outerWidth, outerHeight)
-    love.graphics.setColor(1, 0.8, 0.8)
-    love.graphics.rectangle("fill", innerX, innerY, innerWidth, innerHeight)
---]]
+    love.graphics.setColor( 1, 0, 0 )
+    love.graphics.rectangle( "fill", outerX, outerY, outerWidth, outerHeight )
+    love.graphics.setColor( 0.2, 0.1, 0.1 )
+    love.graphics.rectangle( "fill", innerX, innerY, innerWidth, innerHeight )
+-- reset color to prevent drawing on other stuff
+    love.graphics.setColor( 1, 1, 1 )
+
 
     if program.state[ 'test' ] then
+-- prints deobfuscated user input, bot can read this but the input it writes will be wrong.
         love.graphics.print( userInput )
-        love.graphics.setFont(noiseFont) -- Set the noise font for the timer
+-- Less Obfuscated font for the timer
+        love.graphics.setFont( noiseFont )
         local timeLeft = resetTime - timer
-        love.graphics.print(math.floor(timeLeft), 10, 10)
+        love.graphics.print( math.floor( timeLeft ), 10, 10 )
 
 -- This loop is to draw each characters individually and apply the tranformations
         for _, pos in ipairs( indexedCharacters ) do
@@ -266,7 +349,8 @@ function love.draw()
         buttons.intro_state.startTest:draw( 260, 220, 1, 1 )
     elseif program.state[ 'solved' ] then
 -- Oh yeah right, gotta deobfuscate with the obfuscated-deobfuss...err wait...
--- I'll do it manually... "Gvhg Hloevw" = "Test Solved"
-        love.graphics.print( "Gvhg Hloevw", 10, 200 )
+        love.graphics.setFont( noiseFont )
+        love.graphics.setColor( 0, 1, 0 )
+        love.graphics.print( "Test Solved", 15, 430 )
     end
 end
