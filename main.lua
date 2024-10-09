@@ -208,12 +208,7 @@ The first parameter is the desired length of the CAPTCHA.
 It also defines the user input that is required for the solution.
 --]]
     generatedString = stringGenerator( 8, inputRNG )
---[[
-Below is the loop to index each character and iterate randomized positioning.
-I used operands quite arbitrarily and played around until I was satisfied with the output.
-I did about 100 tests and eyeballed it, this can be improved with more data
-about the potential threat's capabilities.
---]]
+
 -- Table to store indexes and later print them individually
     indexedCharacters = {}
     local PositionX = ( screenX + math.random( 6, 12 ) ) / 4
@@ -345,6 +340,7 @@ function love.draw()
     
     elseif program.state[ 'test' ] then
 -- prints deobfuscated user input, bot can read this but the input it writes will be wrong.
+        love.graphics.setColor( 1, 0, 0 )
         love.graphics.print( userInput, innerX + 6, innerHeight - 38 )
 -- Less obfuscated font for other text
         love.graphics.setFont( noiseFont )
