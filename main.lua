@@ -16,6 +16,7 @@ Can be used to export call that test is passed.
 local program = {
     state = {
         intro = true,
+        analysis = false,
         test = false,
         solved = false,
     }
@@ -26,11 +27,21 @@ to create buttons for different program states, add to this
 list and include it in the button and mouse function on load.
 --]]
 local buttons = {
-    intro_state = {}
+    intro_state = {},
+    analysis_state = {}
 }
 -- Helper functions to switch program states.
+
+local function initiateAnalysis()
+    program.state[ 'intro' ] = false
+    program.state[ 'analysis' ] = true
+    program.state[ 'test' ] = false
+    program.state[ 'solved' ] = false
+end
+
 local function initiateTest()
     program.state[ 'intro' ] = false
+    program.state[ 'analysis' ] = false
     program.state[ 'test' ] = true
     program.state[ 'solved' ] = false
 end
@@ -38,6 +49,7 @@ end
 -- Can also be used to export call that test is passed.
 local function solveTest()
     program.state[ 'intro' ] = false
+    program.state[ 'analysis' ] = false
     program.state[ 'test' ] = false
     program.state[ 'solved' ] = true
 end
@@ -81,12 +93,12 @@ function analyzeMovement( pathDistance )
     print( "Analyzing Movement..." )
     
 -- Loop to compare consecutive points (start at index 2)
-    if program.state[ 'intro' ] then
+    if program.state[ 'analysis' ] then
         for i = 2, #pathDistance do
-            local dx = pathDistance[i].x - pathDistance[ i - 1 ].x
-            local dy = pathDistance[i].y - pathDistance[ i - 1 ].y
+            local dx = pathDistance[ i ].x - pathDistance[ i - 1 ].x
+            local dy = pathDistance[ i ].y - pathDistance[ i - 1 ].y
             local distance = math.sqrt( dx * dx + dy * dy )
-            local timeDifference = pathDistance[i].time - pathDistance[ i - 1 ].time
+            local timeDifference = pathDistance[ i ].time - pathDistance[ i - 1 ].time
 
             totalDistance = totalDistance + distance
             totalTime = totalTime + timeDifference
@@ -119,11 +131,11 @@ end
 function analyzeTrajectory( mousePositions )
 
 -- Check the size of the mousePositions table
-    print("Number of mouse positions: " .. #mousePositions)
+    print( "Number of mouse positions: " .. #mousePositions )
 
 -- If there are not enough points, return early
     if #mousePositions < 3 then
-        print("Not enough points to analyze trajectory.")
+        print( "Not enough points to analyze trajectory." )
         return "insufficient data"
     end
 
@@ -148,14 +160,13 @@ function analyzeTrajectory( mousePositions )
         local dotProduct = vector1x * vector2x + vector1y * vector2y
         local magnitude1 = math.sqrt( vector1x^2 + vector1y^2 )
         local magnitude2 = math.sqrt( vector2x^2 + vector2y^2 )
-        local angleChange = math.acos( dotProduct / (magnitude1 * magnitude2 ) )
 
         -- Check for valid dot product to avoid errors in acos
         if magnitude1 > 0 and magnitude2 > 0 then
-            local angleChange = math.acos(dotProduct / (magnitude1 * magnitude2))
+            local angleChange = math.acos( dotProduct / ( magnitude1 * magnitude2 ) )
             totalAngleChange = totalAngleChange + angleChange
         else
-            print("Skipping angle change due to zero magnitude.")
+            print( "Skipping angle change due to zero magnitude." )
         end
     end
 
@@ -163,10 +174,10 @@ function analyzeTrajectory( mousePositions )
     local avgDeviation = totalDeviation / ( #mousePositions - 2 )
     local avgAngleChange = totalAngleChange / ( #mousePositions - 2 )
 
-    print( string.format( "Average Deviation: %.2f", avgDeviation ) )
-    print( string.format( "Average Angle Change: %.2f", avgAngleChange ) )
+    print( string.format( "Deviation: %.2f", avgDeviation ) )
+    print( string.format( "Angle Change: %.2f", totalAngleChange ) )
 
-    if avgDeviation < 2 and avgAngleChange < math.rad(5) then
+    if avgDeviation < 2 and avgAngleChange < math.rad( 5 ) then
         print( "Trajectory detected as bot-like" )
         return "bot-like-trajectory"
     else
@@ -184,7 +195,9 @@ function love.load()
     love.graphics.setFont( noiseFont )
 -- set default filter for love.graphics to scale without antialiasing.
     love.graphics.setDefaultFilter( "nearest", "nearest" )
-    buttons.intro_state.startTest = button( "Initiate", initiateTest, nil, 160, 40 )
+-- create button for the analysis phase, define the function and size.
+    buttons.analysis_state.startTest = button( "Initiate", initiateTest, nil, 170, 40 )
+    buttons.intro_state.startAnalysis = button( "Start", initiateAnalysis, nil, 110, 40 )
 -- Load seed for math.random Lua function calls to update on load.
     math.randomseed( os.time() )
 -- This static seed serves to adjust the probability while initiating stringGenerator.
@@ -222,16 +235,16 @@ end
 
 -- Mouse pressed event to trigger analysis
 function love.mousepressed(x, y, button, istouch, presses)
-    if program.state['intro'] then
+    if program.state['analysis'] then
         if button == 1 then
 -- Only check if we have sufficient data
-            if #mousePath > 100 then
+            if #mousePath > 50 then
                 local movementResult = analyzeMovement(mousePath)
                 local trajectoryResult = analyzeTrajectory(mousePath)
 
                 if movementResult == "human-like" and trajectoryResult == "human-like-trajectory" then
-                    for index in pairs(buttons.intro_state) do
-                        buttons.intro_state[index]:checkPressed(x, y, cursor.radius)
+                    for index in pairs(buttons.analysis_state) do
+                        buttons.analysis_state[index]:checkPressed(x, y, cursor.radius)
                     end
                 else
                     print("Bot-like behavior detected or insufficient data.")
@@ -239,6 +252,12 @@ function love.mousepressed(x, y, button, istouch, presses)
                 end
             else
                 print("Not enough data to perform analysis.")
+            end
+        end
+    elseif program.state[ 'intro' ] then
+        if button == 1 then
+            for index in pairs( buttons.intro_state ) do
+                buttons.intro_state[index]:checkPressed( x, y, cursor.radius )
             end
         end
     end
@@ -271,28 +290,28 @@ end
 local timer = 0
 local resetTime = 30
 
-function love.update(dt)
-    if program.state['intro'] then
+function love.update( dt )
+    if program.state[ 'analysis' ] then
 -- Updates the analysis of the movement and trajectory, the if loop ensures some movement occurs before a decision is made.
 -- The idea is to block a cursor that would just instantiate on top of a button and forces human-like input to be produced.
-        if #mousePath > 100 then
-            local movementType = analyzeMovement(mousePath)
-            local trajectoryType = analyzeTrajectory(mousePath)
+        if #mousePath > 50 then
+            local movementType = analyzeMovement( mousePath )
+            local trajectoryType = analyzeTrajectory( mousePath )
 
-            print("Final Movement Analysis: " .. movementType)
-            print("Final Trajectory Analysis: " .. trajectoryType)
+            print( "Final Movement Analysis: " .. movementType )
+            print( "Final Trajectory Analysis: " .. trajectoryType )
 
             if movementType == "bot-like" or trajectoryType == "bot-like-trajectory" then
-                print("Bot-like behavior detected.")
+                print( "Bot-like behavior detected." )
                 love.load() -- Restart on bot-like detection
             elseif movementType == "human-like" and trajectoryType == "human-like-trajectory" then
-                print("Human-like behavior detected.")
+                print( "Human-like behavior detected." )
             end
         end
     end
 
 -- Timer logic for CATCHA phase
-    if program.state['test'] then
+    if program.state[ 'test' ] then
         timer = timer + dt
         if timer >= resetTime then
             love.load()
@@ -321,22 +340,25 @@ function love.draw()
 -- reset color to prevent drawing on other stuff
     love.graphics.setColor( 1, 1, 1 )
 
-
-    if program.state[ 'test' ] then
+    if program.state[ 'intro' ] then
+        buttons.intro_state.startAnalysis:draw( innerX + 6, innerY + 6, 2, 4 )
+    
+    elseif program.state[ 'test' ] then
 -- prints deobfuscated user input, bot can read this but the input it writes will be wrong.
-        love.graphics.print( userInput )
--- Less Obfuscated font for the timer
+        love.graphics.print( userInput, innerX + 6, innerHeight - 38 )
+-- Less obfuscated font for other text
         love.graphics.setFont( noiseFont )
+        love.graphics.print( "Type the characters below and press return", innerX + 6, innerY + 6, nil, 0.6, 0.6 )
         local timeLeft = resetTime - timer
-        love.graphics.print( math.floor( timeLeft ), 10, 10 )
+        love.graphics.print( math.floor( timeLeft ), innerWidth - 40, innerHeight - 20 )
 
 -- This loop is to draw each characters individually and apply the tranformations
         for _, pos in ipairs( indexedCharacters ) do
 -- Generates random RGB color for each character
-            local r = math.random()
-            local g = math.random()
-            local b = math.random()
-            love.graphics.setColor( r, g, b )
+            local red = math.random()
+            local green = math.random()
+            local blue = math.random()
+            love.graphics.setColor( red, green, blue )
             love.graphics.setFont( falseFont )
 
             love.graphics.push()
@@ -345,12 +367,20 @@ function love.draw()
             love.graphics.print( pos.characterIndex, screenX + 6, screenY + 6 )
             love.graphics.pop()
         end
-    elseif program.state[ 'intro' ] then
-        buttons.intro_state.startTest:draw( 260, 220, 1, 1 )
+-- Draw the button during the mouse analysis stage.
+    elseif program.state[ 'analysis' ] then
+        buttons.analysis_state.startTest:draw( innerWidth - 270, innerHeight - 40, 2, 4 )
     elseif program.state[ 'solved' ] then
--- Oh yeah right, gotta deobfuscate with the obfuscated-deobfuss...err wait...
+-- Deobfuscate with the obfuscated-deobfuss...err wait...
+
+        love.graphics.setColor( 0, 1, 0 )
+        love.graphics.rectangle( "fill", outerX, outerY, outerWidth, outerHeight )
+        love.graphics.setColor( 0.1, 0.2, 0.1 )
+        love.graphics.rectangle( "fill", innerX, innerY, innerWidth, innerHeight )
+-- reset color to prevent drawing on other stuff
+        love.graphics.setColor( 1, 1, 1 )
         love.graphics.setFont( noiseFont )
         love.graphics.setColor( 0, 1, 0 )
-        love.graphics.print( "Test Solved", 15, 430 )
+        love.graphics.print( "Test Solved", innerWidth / 2 - 110, innerHeight / 2 - 16 )
     end
 end

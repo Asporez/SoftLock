@@ -44,7 +44,7 @@ function Button( text, func, func_param, width, height )
                 self.text_y = self.button_y
             end
 
-            love.graphics.setColor( 0.6, 0.6, 0.6 )
+            love.graphics.setColor( 0.8, 0.6, 0.6 )
             love.graphics.rectangle( "fill", self.button_x, self.button_y, self.width, self.height )
 
             love.graphics.setColor( 0, 0, 0 )
