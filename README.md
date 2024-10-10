@@ -17,6 +17,7 @@
 + Factory pattern table for buttons.
 + Mouse movement speed analysis.
 + Mouse trajectory analysis.
++ Failed checks resets the program and exits afer 6 fails.
 
 ### Special Thanks
 

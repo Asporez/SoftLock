@@ -54,6 +54,30 @@ local function solveTest()
     program.state[ 'solved' ] = true
 end
 
+-- Add a counter at the top to track the number of resets
+local resetCounter = 0
+local maxResets = 6
+
+-- Failed tests resets the program, too many resets closes it.
+local function resetToIntro()
+-- Increment the reset counter
+    resetCounter = resetCounter + 1
+
+    mousePath = {}
+
+-- Check if the limit has been reached
+    if resetCounter >= maxResets then
+        print( "Failed." )
+        love.event.quit()
+    else
+-- If limit not reached, reset the program state to intro
+        program.state[ 'intro' ] = true
+        program.state[ 'analysis' ] = false
+        program.state[ 'test' ] = false
+        program.state[ 'solved' ] = false
+    end
+end
+
 -- This function generates a random string, parameters are length and seed, and both defined in the load function below.
 local function stringGenerator( Length, inputRNG )
 -- Stored variables for the random stringGenerator.
@@ -118,10 +142,10 @@ function analyzeMovement( pathDistance )
         print( string.format( "Total Time: %.2f", totalTime ) )
         print( string.format( "Average Speed: %.2f", avgSpeed ) )
     
-        if avgSpeed > 900 then
+        if avgSpeed > 1200 then
             print( "Movement detected as bot-like" )
             return "bot-like"
-        elseif avgSpeed > 0.1 and avgSpeed <= 900 then
+        elseif avgSpeed > 0.1 and avgSpeed <= 1200 then
             print( "Movement detected as human-like" )
             return "human-like"
         end
@@ -243,7 +267,8 @@ function love.mousepressed(x, y, button, istouch, presses)
                     end
                 else
                     print("Bot-like behavior detected or insufficient data.")
-                    love.load() -- Restart the test if bot-like movement is detected
+                    love.load()
+                    resetToIntro()
                 end
             else
                 print("Not enough data to perform analysis.")
@@ -298,7 +323,8 @@ function love.update( dt )
 
             if movementType == "bot-like" or trajectoryType == "bot-like-trajectory" then
                 print( "Bot-like behavior detected." )
-                love.load() -- Restart on bot-like detection
+                love.load()
+                resetToIntro()
             elseif movementType == "human-like" and trajectoryType == "human-like-trajectory" then
                 print( "Human-like behavior detected." )
             end
@@ -310,6 +336,7 @@ function love.update( dt )
         timer = timer + dt
         if timer >= resetTime then
             love.load()
+            resetToIntro()
             timer = 0
         end
     end
