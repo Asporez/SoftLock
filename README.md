@@ -1,6 +1,6 @@
-# LOVE_CAPTCHA
+# SoftLock
 
- Are you sentient!?
+> Are you sentient!? I think I am, this is why I made a CAPTCHA with the Love2D hoping to impress strangers on the internet with my modest programming knowledge.
 
 
 ## TOOLBOX
