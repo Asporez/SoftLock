@@ -212,6 +212,8 @@ end
 
 
 function love.load()
+    local icon = love.image.newImageData( 'icon.png' )
+    love.window.setIcon(icon)
 -- Obfuscated font.
     falseFont = love.graphics.newFont( 'ZXX_False.otf', 32 )
 -- Less obfuscated font.
