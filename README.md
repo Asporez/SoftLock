@@ -3,7 +3,9 @@
 > Are you sentient!? I think I am, this is why I made a CAPTCHA with the Love2D hoping to impress strangers on the internet with my modest programming knowledge.
 
 Softlock is CAPTCHA I built using Lua language with the Löve2D game engine framework for the 2024 LaurieWired Halloween Programming Challenge.
+
 I chose this framework because I felt this challenge was a great opportunity for me to get more familiar with this framework and develop a better workflow with GitHub.
+
 LaurieWired YT channel: https://www.youtube.com/@lauriewired
 
 ## Usage
