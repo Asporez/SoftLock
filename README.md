@@ -10,6 +10,8 @@ LaurieWired YT channel: https://www.youtube.com/@lauriewired
 
 ## Usage
 
+First extract SoftLock.zip into it's own folder on your computer.
+
 *To launch SoftLock run the Launch Softlock shortcut, alternatively run launch.bat, if this does not work drag SoftLock.love on top of SoftLock.exe OR execute command line SoftLock.exe with Softlock.love as argument.*
 
 The test has 2 stages, the first stage asks the user to click on a button that will initiate analysis of trajectory and movement speed.
