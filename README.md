@@ -4,7 +4,7 @@
 
 Softlock is CAPTCHA I built using Lua language with the Löve2D game engine framework for the 2024 LaurieWired Halloween Programming Challenge.
 
-I chose this framework because I felt this challenge was a great opportunity for me to get more familiar with this framework and develop a better workflow with GitHub.
+I chose this framework because I felt this challenge was a great opportunity for me to get more familiar with Löve2D and develop a better workflow with GitHub.
 
 LaurieWired YT channel: https://www.youtube.com/@lauriewired
 
