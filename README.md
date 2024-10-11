@@ -33,4 +33,4 @@ to improvement and integration of other modules._**
 ### Special Thanks
 
 + Many of the methods I am using as compact libraries I have learned from listening to https://www.youtube.com/@Stevesteacher crash courses on Love2D.
-+ My cats.
++ My cats, Polo and Laika.
