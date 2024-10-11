@@ -15,7 +15,7 @@ To ensure there is enough data collected to perform the analyses this phase has 
 If the data collected returns as bot-like the program will reset, if there is too little data collected on movement it will reset the program.
 
 The CAPTCHA itself uses a random string generator to print each characters individually and update their positions and color randomly at 60FPS while still being readable for humans.
-The font glyph is obfuscated and prints a different character than it registers as input, so if a bot is able to read it the input will sill be wrong.
+The font glyph is obfuscated and prints a different character than it registers as input, so if a bot is able to read it the input will be wrong.
 
 **_There are 6 resets possible after which the program will shut down, a user can force the program to 'softlock' if they move the cursor very fast or
 if they move to the same points in pefect lines or diagonals, the sensitivity can be adjusted and I tried to include notes to make the program friendly
