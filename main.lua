@@ -47,11 +47,15 @@ local function initiateTest()
 end
 -- This helper function is triggered when speed, trajectory, and sentience are verified.
 -- Can also be used to export call that test is passed.
+-- Closes program after 5 seconds.
+local exTimer = 0
+local exitAfterSolve = false
 local function solveTest()
     program.state[ 'intro' ] = false
     program.state[ 'analysis' ] = false
     program.state[ 'test' ] = false
     program.state[ 'solved' ] = true
+    exitAfterSolve = true  -- Start the exit timer
 end
 
 -- Add a counter at the top to track the number of resets
@@ -141,7 +145,7 @@ function analyzeMovement( pathDistance )
         print( string.format( "Total Distance: %.2f", totalDistance ) )
         print( string.format( "Total Time: %.2f", totalTime ) )
         print( string.format( "Average Speed: %.2f", avgSpeed ) )
-    
+-- This loop analyzes mouse movement speed. Very approximate, below 1000 can softlock a user. ADJUST SPEED THRESHOLD HERE
         if avgSpeed > 1200 then
             print( "Movement detected as bot-like" )
             return "bot-like"
@@ -151,7 +155,7 @@ function analyzeMovement( pathDistance )
         end
     end
 end
-
+-- self explanatory
 function analyzeTrajectory( mousePositions )
 
 -- Check the size of the mousePositions table
@@ -194,7 +198,7 @@ function analyzeTrajectory( mousePositions )
         end
     end
 
-    -- Define thresholds for what counts as "human-like" and "bot-like"
+    -- Define thresholds for what counts as "human-like" and "bot-like", ADJUST TRAJECTORY THRESHOLD HERE
     local avgDeviation = totalDeviation / ( #mousePositions - 2 )
     local avgAngleChange = totalAngleChange / ( #mousePositions - 2 )
 
@@ -254,7 +258,7 @@ function love.mousemoved( x, y, dx, dy, istouch )
     table.insert( mousePath, { x = x, y = y, time = love.timer.getTime() } )
 end
 
--- Mouse pressed event to trigger analysis
+-- Mouse pressed event to trigger and conclude analysis
 function love.mousepressed(x, y, button, istouch, presses)
     if program.state['analysis'] then
         if button == 1 then
@@ -308,7 +312,7 @@ function love.keypressed( key )
         solveTest()
     end
 end
-
+-- ADJUST TIMER HERE
 local timer = 0
 local resetTime = 30
 
@@ -330,6 +334,13 @@ function love.update( dt )
             elseif movementType == "human-like" and trajectoryType == "human-like-trajectory" then
                 print( "Human-like behavior detected." )
             end
+        end
+    end
+
+    if exitAfterSolve then
+        exTimer = exTimer + dt
+        if exTimer >= 5 then
+            love.event.quit()  -- Exit after 5 seconds
         end
     end
 
