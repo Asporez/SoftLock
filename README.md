@@ -40,6 +40,7 @@ to improvement and integration of other modules._**
 + Mouse movement speed analysis.
 + Mouse trajectory analysis.
 + Failed checks resets the program and exits afer 6 fails.
++ Program exits 5 second after CAPTCHA is solved.
 
 ### Special Thanks
 
