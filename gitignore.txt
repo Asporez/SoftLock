@@ -1,0 +1,33 @@
+# Lua bytecode
+*.luac
+
+# Temporary files
+*.tmp
+*.temp
+
+# Log files
+*.log
+
+# OS-specific files
+.DS_Store          # macOS
+Thumbs.db         # Windows
+
+# Visual Studio Code settings
+.vscode/
+
+# Backup files
+*~
+*.bak
+
+# Luarocks dependencies directory
+**/luarocks/
+
+# Compiled binaries or executables
+*.exe
+*.out
+*.o
+*.a
+
+# Other IDE or editor specific files
+.idea/
+*.iml
