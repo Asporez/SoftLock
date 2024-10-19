@@ -1,18 +1,30 @@
 -- All you need is love, tu tu du du du duuuu
-local love = require( 'love' )
+-- local love = require( 'love' )
 local button = require( 'src.buttons' )
 local keymap = require( 'src.keymap' )
+
 -- Store variables that determines the area covered by the cursor
+---@class Cursor
+---@field radius number
+---@field x number
+---@field y number
 local cursor = {
     radius = 2,
     x = 1,
     y = 1
 }
+
 --[[
 Table to store the program states,
 program.state[ 'solved' ] prints a message but has no functionality.
 Can be used to export call that test is passed.
 --]]
+
+---@class ProgramState
+---@field intro boolean
+---@field analysis boolean
+---@field test boolean
+---@field solved boolean
 local program = {
     state = {
         intro = true,
@@ -21,11 +33,16 @@ local program = {
         solved = false,
     }
 }
+
 --[[
 table to initiate the button factory as defined on load.
 to create buttons for different program states, add to this
 list and include it in the button and mouse function on load.
 --]]
+
+---@class Buttons
+---@field intro_state table<string, Button>
+---@field analysis_state table<string, Button>
 local buttons = {
     intro_state = {},
     analysis_state = {}
@@ -45,9 +62,11 @@ local function initiateTest()
     program.state[ 'test' ] = true
     program.state[ 'solved' ] = false
 end
+
 -- This helper function is triggered when speed, trajectory, and sentience are verified.
 -- Can also be used to export call that test is passed.
 -- Closes program after 5 seconds.
+
 local exTimer = 0
 local exitAfterSolve = false
 local function solveTest()
@@ -83,16 +102,21 @@ local function resetToIntro()
 end
 
 -- This function generates a random string, parameters are length and seed, and both defined in the load function below.
+---@param Length number
+---@param inputRNG number
+---@return string
 local function stringGenerator( Length, inputRNG )
 -- Stored variables for the random stringGenerator.
     local letterStore = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz"
     local digitStore = "0123456789"
 -- Stored output of the random stringGenerator
     local resultString = ""
+
 --[[
 This loop creates a randomized chance of picking from either Store,
 adds the result to the index until desired length then returns resultString.
 --]]
+
     for i = 1, Length do
         local idxGen = math.random()
         if idxGen < inputRNG then
@@ -110,16 +134,19 @@ end
 -- This defines the initial coordinates of the CAPTCHA.
 local screenX = math.random( 10, 200 )
 local screenY = math.random( 10, 200 )
+
 -- table to store the path taken by the mouse.
 local mousePath = {}
+
 -- Function to analyze the mouse movement speed.
+---@param pathDistance MousePath[]
+---@return string
 function analyzeMovement( pathDistance )
 -- Variables to track the total distance and time
     local totalDistance = 0
     local totalTime = 0
-    
     print( "Analyzing Movement..." )
-    
+
 -- Loop to compare consecutive points (start at index 2)
     if program.state[ 'analysis' ] then
         for i = 2, #pathDistance do
@@ -155,7 +182,9 @@ function analyzeMovement( pathDistance )
         end
     end
 end
--- self explanatory
+-- function to analyze the trajectory of the mouse path and check if it makes perfect lines and diagonals on the raster.
+---@param mousePositions MousePath[]
+---@return string
 function analyzeTrajectory( mousePositions )
 
 -- Check the size of the mousePositions table
@@ -360,8 +389,8 @@ function love.draw()
 -- outer border
     local outerX = 0
     local outerY = 0
-    local outerWidth = 640
-    local outerHeight = 480
+    local outerWidth = love.graphics.getWidth()
+    local outerHeight = love.graphics.getHeight()
 -- inner border
     local innerX = outerX + 10
     local innerY = outerX + 10
