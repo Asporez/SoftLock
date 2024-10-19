@@ -14,6 +14,11 @@ local cursor = {
     y = 1
 }
 
+-- values for the intro timer
+local introTimer = 0
+local introDuration = 120
+local introActive = true
+
 --[[
 Table to store the program states,
 program.state[ 'solved' ] prints a message but has no functionality.
@@ -54,6 +59,7 @@ local function initiateAnalysis()
     program.state[ 'analysis' ] = true
     program.state[ 'test' ] = false
     program.state[ 'solved' ] = false
+    introActive = false
 end
 
 local function initiateTest()
@@ -346,6 +352,16 @@ local timer = 0
 local resetTime = 30
 
 function love.update( dt )
+
+    if program.state[ 'intro' ] then
+        introTimer = introTimer + dt
+        if introTimer >= introDuration then
+            love.event.quit()
+        end
+    else
+        introTimer = 0
+    end
+
     if program.state[ 'analysis' ] then
 -- Updates the analysis of the movement and trajectory, the if loop ensures some movement occurs before a decision is made.
 -- The idea is to block a cursor that would just instantiate on top of a button and forces human-like input to be produced.
